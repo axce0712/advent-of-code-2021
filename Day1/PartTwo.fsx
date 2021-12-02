@@ -1,6 +1,6 @@
 open System.IO
 
-File.ReadLines (Path.Combine(__SOURCE_DIRECTORY__, "input.txt"))
+File.ReadLines (Path.Combine (__SOURCE_DIRECTORY__, "input.txt"))
 |> Seq.map int
 |> Seq.windowed 3
 |> Seq.map Array.sum
