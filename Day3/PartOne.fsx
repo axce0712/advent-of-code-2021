@@ -5,10 +5,11 @@ let numbers =
     File.ReadLines(Path.Combine(__SOURCE_DIRECTORY__, "input.txt"))
     |> Seq.map (fun str -> Array.toList (str.ToCharArray()))
     |> Seq.toList
-    |> List.transpose
+
+let flipped = List.transpose numbers 
 
 let gammaBinaryNumber =
-    numbers
+    flipped
     |> List.map (fun xs ->
         let ones = xs |> List.filter ((=) '1') |> List.length
         let zeros = xs.Length - ones
