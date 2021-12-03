@@ -9,17 +9,9 @@ let findOxygenGeneratorRating candidates =
         match left with
         | [ number ] -> number
         | _ ->
-            let grouped =
-                left
-                |> List.groupBy (fun number -> Seq.item pos number)
-
-            let (ones :: _), (zeros :: _) =
-                List.partition (fun (bit, _) -> bit = '1') grouped
-
-            match List.length (snd ones), List.length (snd zeros) with
-            | onesCount, zeroCounts when onesCount = zeroCounts -> imp (pos + 1) (snd ones)
-            | onesCount, zeroCounts when onesCount > zeroCounts -> imp (pos + 1) (snd ones)
-            | onesCount, zeroCounts when onesCount < zeroCounts -> imp (pos + 1) (snd zeros)
+            let ones, zeros = left |> List.partition (fun number -> Seq.item pos number = '1')
+            let newLeft = if ones.Length >= zeros.Length then ones else zeros
+            imp (pos + 1) newLeft
 
     imp 0 candidates
 
@@ -28,17 +20,9 @@ let findCo2ScrubberRating candidates =
         match left with
         | [ number ] -> number
         | _ ->
-            let grouped =
-                left
-                |> List.groupBy (fun number -> Seq.item pos number)
-
-            let (ones :: _), (zeros :: _) =
-                List.partition (fun (bit, _) -> bit = '1') grouped
-
-            match List.length (snd ones), List.length (snd zeros) with
-            | onesCount, zeroCounts when onesCount = zeroCounts -> imp (pos + 1) (snd zeros)
-            | onesCount, zeroCounts when onesCount > zeroCounts -> imp (pos + 1) (snd zeros)
-            | onesCount, zeroCounts when onesCount < zeroCounts -> imp (pos + 1) (snd ones)
+            let ones, zeros = left |> List.partition (fun number -> Seq.item pos number = '1')
+            let newLeft =  if zeros.Length <= ones.Length then zeros else ones
+            imp (pos + 1) newLeft
 
     imp 0 candidates
 

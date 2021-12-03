@@ -27,4 +27,6 @@ let binaryNumberToInt (input : string) =
         then Seq.replicate n 2 |> Seq.fold (fun a b -> a * b) 1
         else 0)
 
-binaryNumberToInt gammaBinaryNumber * binaryNumberToInt epsilonBinaryNumber
+let gamma = binaryNumberToInt gammaBinaryNumber
+let epsilon = binaryNumberToInt epsilonBinaryNumber
+gamma * epsilon
