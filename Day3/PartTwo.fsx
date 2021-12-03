@@ -21,7 +21,7 @@ let findCo2ScrubberRating candidates =
         | [ number ] -> number
         | _ ->
             let ones, zeros = left |> List.partition (fun number -> Seq.item pos number = '1')
-            let newLeft =  if zeros.Length <= ones.Length then zeros else ones
+            let newLeft = if zeros.Length <= ones.Length then zeros else ones
             imp (pos + 1) newLeft
 
     imp 0 candidates
