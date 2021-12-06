@@ -35,21 +35,16 @@ let generate a b =
 
     imp [ a ] a
 
-let pointsCovered { Begin = (x1, y1); End = (x2, y2) } =
-    if x1 = x2 || y1 = y2
-    then
-        [
-            for x in generate x1 x2 do
-                for y in generate y1 y2 do
-                    (x, y)
-        ]
-    else
-        List.zip (generate x1 x2) (generate y1 y2)
+let pointsCovered { Begin = b; End = e } =
+    match b, e with
+    | (x1, y1), (x2, y2) when x1 = x2 -> [ for y in generate y1 y2 -> (x1, y) ]
+    | (x1, y1), (x2, y2) when y1 = y2 -> [ for x in generate x1 x2 -> (x, y1) ]
+    | (x1, y1), (x2, y2) -> List.zip (generate x1 x2) (generate y1 y2)
 
 let cover m position =
     match Map.tryFind position m with
     | Some n -> Map.add position (n + 1) m
-    | None -> Map.add position 1 m
+    | None   -> Map.add position 1 m
 
 let sprintDiagram (m : Diagram) =
     let minX = Map.keys m |> Seq.map fst |> Seq.min
