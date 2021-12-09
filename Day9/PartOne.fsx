@@ -44,7 +44,5 @@ let riskLevel lowPoints =
 
 let content =
     File.ReadLines(Path.Combine(__SOURCE_DIRECTORY__, "input.txt"))
-let area =
-    parse (content)
 
-lowPoints area |> riskLevel
+parse content |> lowPoints |> riskLevel
