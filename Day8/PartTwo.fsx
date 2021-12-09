@@ -9,33 +9,64 @@ type OptionBuilder() =
 
 let option = OptionBuilder()
 
-let parse (line : string) =
-    line.Split('|')
-        .[1]
-        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-    |> Seq.toList
+let tryFindZero digit m =
+    option {
+        let! s9 = Map.tryFindKey (fun _ n -> n = 9) m
+        let! s3 = Map.tryFindKey (fun _ n -> n = 3) m
+        let s4 = Map.findKey (fun _ n -> n = 4) m
+        let s8 = Map.findKey (fun _ n -> n = 8) m
+        let s1 = Map.findKey (fun _ n -> n = 1) m
+        let b = s9 - s3 
+        let d = s4 - s1 - b
+        let! result =
+            if (s8 - d) = digit then Some 0 else None
+        return result
+    }
+
+let tryFindTwo m =
+    if Map.exists (fun _ n -> n = 3) m && Map.exists (fun _ n -> n = 5) m
+    then Some 2
+    else None
 
 let tryFindThree digit m =
     option {
-        let! s9s = Map.tryFindKey (fun _ n -> n = 9) m
-        let! s1s = Map.tryFindKey (fun _ n -> n = 1) m
-        let diff = Set.difference s9s digit
-        return!
-            match Set.isProperSubset s1s digit, Set.toList diff with
+        let! s9 = Map.tryFindKey (fun _ n -> n = 9) m
+        let! s1 = Map.tryFindKey (fun _ n -> n = 1) m
+        let diff = Set.difference s9 digit
+        let! result =
+            match Set.isProperSubset s1 digit, Set.toList diff with
             | true, [ _ ] -> Some 3
             | _ -> None
+        return result
     }
+
+let tryFindFive digit m =
+    option {
+        let! s6 = Map.tryFindKey (fun _ n -> n = 6) m
+        let diff = Set.difference s6 digit
+        let! result =
+            match Seq.toList diff with
+            | [ _ ] -> Some 5
+            | _ -> None
+        return result
+    }
+
+let tryFindSix m =
+    if Map.exists (fun _ n -> n = 0) m && Map.exists (fun _ n -> n = 9) m
+    then Some 6
+    else None
 
 let tryFindNine digit m =
     option {
-        let! s7s = Map.tryFindKey (fun _ n -> n = 7) m
-        let! s4s = Map.tryFindKey (fun _ n -> n = 4) m
-        let combined = Set.union s7s s4s
+        let! s7 = Map.tryFindKey (fun _ n -> n = 7) m
+        let! s4 = Map.tryFindKey (fun _ n -> n = 4) m
+        let combined = Set.union s7 s4
         let diff = Set.difference digit combined
-        return!
+        let! result =
             match Set.toList diff with
             | [ _ ] -> Some 9
             | _     -> None
+        return result
     }
 
 let findMatch (m : Map<Set<char>, int>) (digit : Set<char>) =
@@ -48,39 +79,14 @@ let findMatch (m : Map<Set<char>, int>) (digit : Set<char>) =
         | 4 -> Some 4 // 4
         | 5 -> // 2 3 5
             tryFindThree digit m
+            |> Option.orElse (tryFindFive digit m)
+            |> Option.orElse (tryFindTwo m)
         | 6 -> // 0 6 9
             tryFindNine digit m
+            |> Option.orElse (tryFindZero digit m)
+            |> Option.orElse (tryFindSix m)
         | 7 -> Some 8 // 8
         | _ -> None
-
-let resolveSegments m =
-    option {
-        let! s7s = Map.tryFindKey (fun _ n -> n = 7) m
-        let! s1s = Map.tryFindKey (fun _ n -> n = 1) m
-        return!
-            match Set.difference s7s s1s |> Seq.toList with
-            | [ s ] -> Some ("a", string s)
-            | _ -> None
-    }
-
-let content =
-    "be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe
-edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc
-fgaebd cg bdaec gdafb agbcfd gdcbef bgcad gfac gcb cdgabef | cg cg fdcagb cbg
-fbegcd cbd adcefb dageb afcb bc aefdc ecdab fgdeca fcdbega | efabcd cedba gadfec cb
-aecbfdg fbg gf bafeg dbefa fcge gcbea fcaegb dgceab fcbdga | gecf egdcabf bgf bfgea
-fgeab ca afcebg bdacfeg cfaedg gcfdb baec bfadeg bafgc acf | gebdcfa ecba ca fadegcb
-dbcfg fgd bdegcaf fgec aegbdf ecdfab fbedc dacgb gdcebf gf | cefg dcbef fcge gbcadfe
-bdfegc cbegaf gecbf dfcage bdacg ed bedf ced adcbefg gebcd | ed bcgafe cdgba cbgef
-egadfb cdbfeg cegd fecab cgb gbdefca cg fgcdab egfdb bfceg | gbdfcae bgc cg cgb
-gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce".Split('\n')
-
-let line = "acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf"
-
-let digits (line : string) =
-    line.Split([| " "; "|" |], StringSplitOptions.RemoveEmptyEntries)
-    |> Seq.map set
-    |> Seq.toList
 
 let run m digits =
     let rec imp unresolved m ds =
@@ -93,9 +99,50 @@ let run m digits =
 
     imp [] m digits
 
-(Map.empty, (digits line))
-||> run 
-||> run
-||> run
+let resolveNumbers digits =
+    let rec imp acc left =
+        match left with
+        | [] -> acc
+        | ls -> run acc ls ||> imp
 
-// let segments = resolveSegments matches
+    imp Map.empty digits
+
+let resolveOutput (line : string) =
+    let parts =
+        line.Split("|")
+        |> Seq.map (fun part -> part.Split(' ', StringSplitOptions.RemoveEmptyEntries) |> Seq.map set |> Seq.toList)
+        |> Seq.toList
+
+    let digits = parts |> List.collect id
+    let numbers = resolveNumbers digits
+    let output = parts.[1]
+    let asNumber =
+        output
+        |> Seq.map (fun s -> Map.find s numbers |> string)
+        |> String.concat ""
+    asNumber
+
+// let line = "acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf"
+
+// line.Split([| " "; "|" |], StringSplitOptions.RemoveEmptyEntries)
+// |> Seq.map set
+// |> Seq.toList
+// |> resolveNumbers
+
+// let content =
+//     "be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe
+// edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc
+// fgaebd cg bdaec gdafb agbcfd gdcbef bgcad gfac gcb cdgabef | cg cg fdcagb cbg
+// fbegcd cbd adcefb dageb afcb bc aefdc ecdab fgdeca fcdbega | efabcd cedba gadfec cb
+// aecbfdg fbg gf bafeg dbefa fcge gcbea fcaegb dgceab fcbdga | gecf egdcabf bgf bfgea
+// fgeab ca afcebg bdacfeg cfaedg gcfdb baec bfadeg bafgc acf | gebdcfa ecba ca fadegcb
+// dbcfg fgd bdegcaf fgec aegbdf ecdfab fbedc dacgb gdcebf gf | cefg dcbef fcge gbcadfe
+// bdfegc cbegaf gecbf dfcage bdacg ed bedf ced adcbefg gebcd | ed bcgafe cdgba cbgef
+// egadfb cdbfeg cegd fecab cgb gbdefca cg fgcdab egfdb bfceg | gbdfcae bgc cg cgb
+// gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce".Split('\n')
+
+// content
+// |> Seq.sumBy (resolveOutput >> int)
+
+File.ReadLines(Path.Combine(__SOURCE_DIRECTORY__, "input.txt"))
+|> Seq.sumBy (resolveOutput >> int)
