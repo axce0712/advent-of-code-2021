@@ -1,4 +1,3 @@
-open System
 open System.IO
 
 type ParseResult =
@@ -53,10 +52,9 @@ let score = function
 // <{([([[(<>()){}]>(<<{{
 // <{([{{}}[<[[[<>{}]]]>[]]".Split('\n')
 
-// content
-// |> Seq.map (Seq.toList >> tryFindInvalidChunk)
-// |> Seq.sumBy (function Corrupted (illegal, _) -> score illegal | _ -> 0)
+let content =
+    File.ReadLines(Path.Combine(__SOURCE_DIRECTORY__, "input.txt"))
 
-File.ReadLines(Path.Combine(__SOURCE_DIRECTORY__, "input.txt"))
+content
 |> Seq.map (Seq.toList >> tryFindInvalidChunk)
 |> Seq.sumBy (function Corrupted (illegal, _) -> score illegal | _ -> 0)
