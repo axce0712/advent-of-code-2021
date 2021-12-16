@@ -1,3 +1,5 @@
+open System
+open System.IO
 
 let parseRule (input : string) =
     let [| target; element |] = input.Split(" -> ")
@@ -25,27 +27,30 @@ let step rules list =
 
     mapped @ list[^0..]
 
+// let content =
+//     "NNCB
+
+// CH -> B
+// HH -> N
+// CB -> H
+// NH -> C
+// HB -> C
+// HC -> B
+// HN -> C
+// NN -> C
+// BH -> H
+// NC -> B
+// NB -> B
+// BN -> B
+// BB -> N
+// BC -> B
+// CC -> N
+// CN -> C"
+
+// let template, rules = parse "\n" content
 let content =
-    "NNCB
-
-CH -> B
-HH -> N
-CB -> H
-NH -> C
-HB -> C
-HC -> B
-HN -> C
-NN -> C
-BH -> H
-NC -> B
-NB -> B
-BN -> B
-BB -> N
-BC -> B
-CC -> N
-CN -> C"
-
-let template, rules = parse "\n" content
+    File.ReadAllText (Path.Combine (__SOURCE_DIRECTORY__, "input.txt"))
+let template, rules = parse Environment.NewLine content
 let occurrences =
     Seq.replicate 10 (step rules)
     |> Seq.fold (|>) template
