@@ -54,9 +54,10 @@ let foldPosition instruction (x, y) =
 let foldStep dots instruction =
     dots |> Set.map (foldPosition instruction)
 
+let solve dots = foldStep dots >> Set.count
+
 let content =
     File.ReadAllText (Path.Combine (__SOURCE_DIRECTORY__, "input.txt"))
 
 let dots, i :: _ = parse Environment.NewLine content
-let newDots = foldStep dots i
-Set.count newDots
+solve dots i

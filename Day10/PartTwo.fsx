@@ -49,6 +49,14 @@ let chooseIncompleted =
 let determineScore =
     List.fold (fun scoreSoFar chunk -> scoreSoFar * 5L + score (invert chunk)) 0L
 
+let solve lines =
+    lines
+    |> Seq.choose (Seq.toList >> parseChunk >> chooseIncompleted)
+    |> Seq.map determineScore
+    |> Seq.sort
+    |> Seq.toList
+    |> fun xs -> xs.[xs.Length / 2]
+
 // let content =
 //     "[({(<(())[]>[[{[]{<()<>>
 // [(()[<>])]({[<{<<[]>>(
@@ -64,9 +72,4 @@ let determineScore =
 let content =
     File.ReadLines(Path.Combine(__SOURCE_DIRECTORY__, "input.txt"))
 
-content
-|> Seq.choose (Seq.toList >> parseChunk >> chooseIncompleted)
-|> Seq.map determineScore
-|> Seq.sort
-|> Seq.toList
-|> fun xs -> xs.[xs.Length / 2]
+solve content

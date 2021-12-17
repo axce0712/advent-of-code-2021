@@ -75,6 +75,16 @@ let print (m : Map<int * int, State>) =
             ]
     ]
 
+let solve m =
+    m
+    |> Seq.unfold (fun acc -> Some (acc, step acc))
+    |> Seq.indexed
+    |> Seq.skipWhile (fun (_, m) ->
+        m
+        |> Map.forall (fun _ state -> match state with EnergyLevel 0 -> true | _ -> false)
+        |> not)
+    |> Seq.head
+
 let content =
     "3265255276
 1537412665
@@ -87,11 +97,4 @@ let content =
 8824387665
 6351586484"
 
-parse content
-|> Seq.unfold (fun acc -> Some (acc, step acc))
-|> Seq.indexed
-|> Seq.skipWhile (fun (_, m) ->
-    m
-    |> Map.forall (fun _ state -> match state with EnergyLevel 0 -> true | _ -> false)
-    |> not)
-|> Seq.head
+solve (parse content)

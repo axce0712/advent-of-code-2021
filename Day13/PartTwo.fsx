@@ -71,5 +71,10 @@ let content =
     File.ReadAllText (Path.Combine (__SOURCE_DIRECTORY__, "input.txt"))
 
 parse Environment.NewLine content
-||> List.fold foldStep
-|> print
+
+let solve dots instructions =
+    instructions
+    |> List.fold foldStep dots 
+    |> print
+
+parse Environment.NewLine content ||> solve 

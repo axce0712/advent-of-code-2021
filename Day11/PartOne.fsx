@@ -80,6 +80,12 @@ let print (m : Map<int * int, State>) =
             ]
     ]
 
+let solve m =
+    [0..100]
+    |> List.mapFold (fun acc _ -> countZeros acc, step acc) m
+    |> fst
+    |> Seq.sum
+
 let content =
     "3265255276
 1537412665
@@ -92,7 +98,4 @@ let content =
 8824387665
 6351586484"
 
-[0..100]
-|> List.mapFold (fun acc _ -> countZeros acc, step acc) (parse content)
-|> fst
-|> Seq.sum
+solve (parse content)

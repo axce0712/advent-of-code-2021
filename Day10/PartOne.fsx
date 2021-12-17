@@ -40,6 +40,11 @@ let score = function
     | '}' -> 1197
     | '>' -> 25137
 
+let solve lines =
+    lines
+    |> Seq.map (Seq.toList >> tryFindInvalidChunk)
+    |> Seq.sumBy (function Corrupted (illegal, _) -> score illegal | _ -> 0)
+
 // let content =
 //     "[({(<(())[]>[[{[]{<()<>>
 // [(()[<>])]({[<{<<[]>>(
@@ -52,9 +57,7 @@ let score = function
 // <{([([[(<>()){}]>(<<{{
 // <{([{{}}[<[[[<>{}]]]>[]]".Split('\n')
 
-let content =
+let lines =
     File.ReadLines(Path.Combine(__SOURCE_DIRECTORY__, "input.txt"))
 
-content
-|> Seq.map (Seq.toList >> tryFindInvalidChunk)
-|> Seq.sumBy (function Corrupted (illegal, _) -> score illegal | _ -> 0)
+solve lines

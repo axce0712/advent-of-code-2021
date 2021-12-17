@@ -80,6 +80,13 @@ let rec findPath { Current = current; Visited = visited; Remaining = remaining }
         nexts
         |> List.collect (fun p -> findPath { Current = p; Visited = current :: visited; Remaining = newRemaining })
 
+let solve paths =
+    let combinations = possbileCombinations paths
+
+    init combinations
+    |> List.collect findPath
+    |> List.length
+
 let content =
     "ln-nr
 ln-wy
@@ -104,11 +111,6 @@ end-wy
 qc-nr
 end-nr"
 
-let paths =
-    parse content
+solve (parse content)
 
-let combinations = possbileCombinations paths
 
-init combinations
-|> List.collect findPath
-|> List.length
