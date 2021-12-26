@@ -59,12 +59,9 @@ let isBetweenR (Range (f1, t1) as range1) (Range (f2, t2) as range2) =
 let isBetweenC (Cuboid (rx1, ry1, rz1)) (Cuboid (rx2, ry2, rz2)) =
     isBetweenR rx1 rx2 && isBetweenR ry1 ry2 && isBetweenR rz1 rz2
 
-let intersectR (Range (f1, t1) as range1) (Range (f2, t2)) =
-    if isBetween f2 range1 then
-        let tMin = min t1 t2
-        Some (range (f2, tMin))
-    elif isBetween t2 range1 then
-        Some (range (f1, t2))
+let intersectR (Range (f1, t1) as range1) (Range (f2, t2) as range2) =
+    if isBetween f1 range2 || isBetween f2 range1 then
+        Some (range (max f1 f2, min t1 t2))
     else
         None
 
@@ -94,8 +91,6 @@ let countC (Cuboid (rx, ry, rz)) =
 let count (added, subtracted) =
     List.sumBy countC added - List.sumBy countC subtracted
 
-let flip f x y = f y x
-
 let solve instructions =
     instructions
     |> Seq.fold (fun acc ->
@@ -104,13 +99,13 @@ let solve instructions =
         | Off c -> turnOff acc c) ([], [])
     |> count
 
+let flip f x y = f y x
+
 ([ cuboid (10, 12) (10, 12) (10, 12) ], [])
 |> flip turnOn (cuboid (11, 13) (11, 13) (11, 13))
 |> flip turnOff (cuboid (9, 11) (9, 11) (9, 11))
 |> flip turnOn (cuboid (10, 10) (10, 10) (10, 10))
-
-([ cuboid (10, 10) (10, 10) (10, 10) ], [])
-|> flip turnOn (cuboid (10, 10) (10, 10) (10, 11))
+|> count
 
 let content =
     "on x=-5..47,y=-31..22,z=-19..33
@@ -175,9 +170,8 @@ on x=-53470..21291,y=-120233..-33476,z=-44150..38147
 off x=-93533..-4276,y=-16170..68771,z=-104985..-24507"
 
 #time
+// content.Split '\n'
 File.ReadLines (Path.Combine (__SOURCE_DIRECTORY__, "input.txt"))
 |> Seq.map parseInstruction
 |> solve
 #time
-
-// 4411366377266339L
