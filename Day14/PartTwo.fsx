@@ -15,24 +15,8 @@ let parse newLine (input : string) =
     templatePart, rules
 
 let insert rules (value : string) =
-    match Map.tryFind value rules with
-    | Some element -> value[..0] + element, Some (element + value[1..])
-    | None _ -> value, None
-
-let init (input : string) =
-    let actual =
-        input
-        |> Seq.chunkBySize 2
-        |> Seq.map (fun xs -> String xs, 1L)
-        |> Seq.toList
-
-    let next =
-        input[1..]
-        |> Seq.chunkBySize 2
-        |> Seq.map (fun xs -> String xs, 1L)
-        |> Seq.toList
-
-    Map.ofList actual, Map.ofList (actual @ next)
+    let element = Map.find value rules
+    value[..0] + element, element + value[1..]
 
 let addCount pair count m =
     let newCount =
@@ -42,63 +26,75 @@ let addCount pair count m =
 
     Map.add pair newCount m
 
+let init (input : string) =
+    let actual =
+        input
+        |> Seq.chunkBySize 2
+        |> Seq.fold (fun acc xs -> addCount (String xs) 1L acc) Map.empty
+
+    let next =
+        input
+        |> Seq.windowed 2
+        |> Seq.fold (fun acc xs -> addCount (String xs) 1L acc) Map.empty
+
+    actual, next
+
 let step rules actual =
-    ((Map.empty, Map.empty), actual)
-    ||> Map.fold (fun (actualSoFar, nextSoFar) pair count ->
+    actual
+    |> Map.fold (fun (actualSoFar, nextSoFar) pair count ->
         let newPair, nextPair = insert rules pair
         let newActual = addCount newPair count actualSoFar
         let newNext =
-            nextPair
-            |> Option.map (fun p -> addCount p count nextSoFar)
-            |> Option.defaultValue nextSoFar
+            nextSoFar
             |> addCount newPair count
-        newActual, newNext)
+            |> addCount nextPair count
+            
+        newActual, newNext) (Map.empty, Map.empty)
 
 let count actual =
     actual
-    |> Map.fold (fun acc pair count ->
-        pair
-        |> Seq.map (fun c -> c, count)
-        |> Seq.fold (fun innerAcc (c, cn) -> addCount c cn innerAcc) acc) Map.empty
+    |> Map.toSeq
+    |> Seq.collect (fun (pair, count) -> pair |> Seq.map (fun c -> c, count))
+    |> Seq.fold (fun acc (c, cnt) -> addCount c cnt acc) Map.empty
 
-let solve rules template =
-    let elements =
+let solve iterationCount rules template =
+    let chart =
         (snd >> (step rules))
-        |> Seq.replicate 40 
+        |> Seq.replicate iterationCount 
         |> Seq.fold (|>) (init template)
         |> fst
+        |> addCount (template[^0..]) 1L
         |> count
         |> Map.toList
         
-    let mostCommon = List.maxBy snd elements |> snd
-    let leastCommon = List.minBy snd elements |> snd
+    let mostCommon = chart |> List.map snd |> List.max
+    let leastCommon = chart |> List.map snd |> List.min
     mostCommon - leastCommon
 
-let content =
-    "NNCB
-
-CH -> B
-HH -> N
-CB -> H
-NH -> C
-HB -> C
-HC -> B
-HN -> C
-NN -> C
-BH -> H
-NC -> B
-NB -> B
-BN -> B
-BB -> N
-BC -> B
-CC -> N
-CN -> C"
-
-let template, rules = parse "\n" content
-
 // let content =
-//     File.ReadAllText (Path.Combine (__SOURCE_DIRECTORY__, "input.txt"))
+//    "NNCB
 
-// let template, rules = parse Environment.NewLine content
+// CH -> B
+// HH -> N
+// CB -> H
+// NH -> C
+// HB -> C
+// HC -> B
+// HN -> C
+// NN -> C
+// BH -> H
+// NC -> B
+// NB -> B
+// BN -> B
+// BB -> N
+// BC -> B
+// CC -> N
+// CN -> C"
 
-solve rules template
+// let template, rules = parse "\n" content
+
+let content =
+    File.ReadAllText (Path.Combine (__SOURCE_DIRECTORY__, "input.txt"))
+
+let template, rules = parse Environment.NewLine content
+solve 40 rules template

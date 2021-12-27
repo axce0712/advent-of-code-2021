@@ -27,9 +27,9 @@ let step rules list =
 
     mapped @ list[^0..]
 
-let solve rules template =
+let solve iterationCount rules template =
     let occurrences =
-        Seq.replicate 10 (step rules)
+        Seq.replicate iterationCount (step rules)
         |> Seq.fold (|>) template
         |> Seq.countBy id
         |> Seq.toList
@@ -63,4 +63,4 @@ let solve rules template =
 let content =
     File.ReadAllText (Path.Combine (__SOURCE_DIRECTORY__, "input.txt"))
 let template, rules = parse Environment.NewLine content
-solve rules template
+solve 10 rules template
