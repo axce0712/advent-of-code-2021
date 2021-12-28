@@ -77,21 +77,19 @@ let rec step bits =
         let countBits, remaining = List.splitAt 11 remaining
         let count = toInt countBits
         let versionss, finalRemaining =
-            [1..3]
-            |> List.mapFold (fun remaining _ ->
-                let versions, newRemaining = step remaining
-                versions, newRemaining) remaining
+            [1..count]
+            |> List.mapFold (fun remaining _ -> step remaining) remaining
 
         version :: (List.collect id versionss), finalRemaining
-    | _ -> failwith ""
+    | _ -> failwith "invalid sequence"
 
 let solve input =
     let rec imp bits =
         let versions, remaining = step bits
-        match remaining with
-        | [] -> versions
-        | rs when List.forall ((=) 0) rs -> versions
-        | rs -> versions @ (imp rs)
+        if List.forall ((=) 0) remaining then
+            versions
+        else
+            versions @ (imp remaining)
 
     imp (decode input) |> List.sum
 
